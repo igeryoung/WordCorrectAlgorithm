@@ -62,9 +62,7 @@ def HasCommaPipeline(supabase, model, raw_code, raw_text):
 
 if __name__ == "__main__":
 
-    raw_code = '03310251Z4'
-    raw_text = '結構用混凝土，預拌，210kgf/cm2，第1型水泥，含澆置及搗實'
-
+    # init
     load_dotenv()
     supabase = SupabaseConnect()
     model = SentenceTransformer(
@@ -73,8 +71,12 @@ if __name__ == "__main__":
         model_kwargs={"file_name": "model_qint8_avx512_vnni.onnx"},
     )
 
-    mode, raw_text = TestCommaExist(raw_text)
+    # testing data
+    raw_code = '03310251Z4'
+    raw_text = '結構用混凝土，預拌，210kgf/cm2，第1型水泥，含澆置及搗實'
 
+    # main function
+    mode, raw_text = TestCommaExist(raw_text)
     if mode == "comma":
         HasCommaPipeline(supabase, model, raw_code, raw_text)
         

@@ -59,7 +59,7 @@ def QueryNthCandidateByParentCode(supabase, rank, parentCode, chapter, col = Non
         return response.data
     except Exception as e:
         print("An error occurred:", e)
-        return None
+        return []
     
 def jsonl_to_list(data):
     data_dict = {}
