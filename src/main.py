@@ -2,7 +2,10 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 from utils import *
+import torch
 from sentence_transformers import SentenceTransformer
+import onnxruntime as ort
+ort.set_default_logger_severity(3)
 
 
 def SupabaseConnect():
@@ -15,7 +18,7 @@ def SupabaseConnect():
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     return supabase
 
-def HasCommaPipeline(supabase, raw_code, raw_text):
+def HasCommaPipeline(supabase, model, raw_code, raw_text):
     corrected_code = []
     corrected_name = []
 
@@ -27,26 +30,33 @@ def HasCommaPipeline(supabase, raw_code, raw_text):
     cur_rank = 0
     cur_code = chapter_info['chapter']
 
-    for text in raw_text:
-
+    for text in raw_text[1:]:
         candidates = QueryNthCandidateByParentCode(supabase, 
             rank = cur_rank, 
             parentCode = cur_code, 
             chapter = chapter, 
             col = ['childcode', 'childname'])
+        candidates_list = jsonl_to_list(candidates)
+
+        if len(candidates_list) == 0:
+            break
+
+        if text in candidates_list['childname']:
+            idx = candidates_list['childname'].index(text)
+        else:
+            embeddings = model.encode([text] + candidates_list['childname'])
+            similarities = model.similarity(embeddings, embeddings)
+            idx = torch.argmax(similarities[0][1:])
         
-        for candidate in candidates:
-            if text == candidate['childname']:
-                cur_code = candidate['childcode']
-                corrected_code.append(candidate['childcode'])
-                corrected_name.append(candidate['childname'])
-                break
-            else:
-                pass
+        corrected_code.append(candidates[idx]['childcode'])
+        corrected_name.append(candidates[idx]['childname'])
 
         cur_rank += 1
+        cur_code = candidates[idx]['childcode']
 
-
+    print(corrected_code)
+    print(corrected_name)
+    return corrected_code, corrected_name
 
 
 
@@ -63,11 +73,10 @@ if __name__ == "__main__":
         model_kwargs={"file_name": "model_qint8_avx512_vnni.onnx"},
     )
 
-
     mode, raw_text = TestCommaExist(raw_text)
 
     if mode == "comma":
-        HasCommaPipeline(supabase, raw_code, raw_text)
+        HasCommaPipeline(supabase, model, raw_code, raw_text)
         
     
 

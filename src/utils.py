@@ -41,7 +41,7 @@ def TestChapterCodeConsistency(supabase, raw_code, raw_text):
 
     return info_from_code, raw_text
 
-def QueryNthCandidateByParentCode(supabase, n, parentCode, chapter, col = None):
+def QueryNthCandidateByParentCode(supabase, rank, parentCode, chapter, col = None):
     try:
         if col:
             select_col = ", ".join(col)
@@ -50,7 +50,7 @@ def QueryNthCandidateByParentCode(supabase, n, parentCode, chapter, col = None):
         
         response = supabase.table("link").select(select_col).match({
             "chapter": chapter,
-            "rank": n,
+            "rank": rank,
             "code": parentCode
         }).execute()
 
@@ -63,8 +63,9 @@ def QueryNthCandidateByParentCode(supabase, n, parentCode, chapter, col = None):
     
 def jsonl_to_list(data):
     data_dict = {}
-    for key, value in data.items():
-        if key not in data_dict:
-            data_dict[key] = []
-        data_dict[key].append(value)
+    for row in data:
+        for key, value in row.items():
+            if key not in data_dict:
+                data_dict[key] = []
+            data_dict[key].append(value)
     return data_dict
