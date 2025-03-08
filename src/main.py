@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 from utils import *
+from sentence_transformers import SentenceTransformer
+
 
 def SupabaseConnect():
     SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -14,9 +16,38 @@ def SupabaseConnect():
     return supabase
 
 def HasCommaPipeline(supabase, raw_code, raw_text):
-    raw_text = TestChapterCodeConsistency(supabase, raw_code, raw_text)
+    corrected_code = []
+    corrected_name = []
 
-    
+    chapter_info, raw_text = TestChapterCodeConsistency(supabase, raw_code, raw_text)
+    corrected_code.append(chapter_info['chapter'])
+    corrected_name.append(chapter_info['name'])
+
+    chapter = int(chapter_info['chapter'])
+    cur_rank = 0
+    cur_code = chapter_info['chapter']
+
+    for text in raw_text:
+
+        candidates = QueryNthCandidateByParentCode(supabase, 
+            rank = cur_rank, 
+            parentCode = cur_code, 
+            chapter = chapter, 
+            col = ['childcode', 'childname'])
+        
+        for candidate in candidates:
+            if text == candidate['childname']:
+                cur_code = candidate['childcode']
+                corrected_code.append(candidate['childcode'])
+                corrected_name.append(candidate['childname'])
+                break
+            else:
+                pass
+
+        cur_rank += 1
+
+
+
 
 
 if __name__ == "__main__":
@@ -26,6 +57,12 @@ if __name__ == "__main__":
 
     load_dotenv()
     supabase = SupabaseConnect()
+    model = SentenceTransformer(
+        "shibing624/text2vec-base-chinese",
+        backend="onnx",
+        model_kwargs={"file_name": "model_qint8_avx512_vnni.onnx"},
+    )
+
 
     mode, raw_text = TestCommaExist(raw_text)
 

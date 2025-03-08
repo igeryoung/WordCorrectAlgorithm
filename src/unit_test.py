@@ -21,4 +21,7 @@ if __name__ == "__main__":
     load_dotenv()
     supabase = SupabaseConnect()
 
-    QueryNthCandidateByParentCode(supabase, 0, '03310', int('03310'))
+    query_col = ['childcode', 'childname']
+    data = QueryNthCandidateByParentCode(supabase, 0, '03310', int('03310'), col=query_col)
+    for item in data:
+        print(item)

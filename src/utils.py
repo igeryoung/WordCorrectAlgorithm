@@ -37,22 +37,34 @@ def TestChapterCodeConsistency(supabase, raw_code, raw_text):
     info_from_text = GetChapterInfoByText(supabase, raw_text[0])
 
     if info_from_code != info_from_text:
-        raw_text = [info_from_code["chapter"]] + raw_text
+        raw_text = [info_from_code["name"]] + raw_text
 
-    return raw_text
+    return info_from_code, raw_text
 
-def QueryNthCandidateByParentCode(supabase, n, parentCode, chapter):
+def QueryNthCandidateByParentCode(supabase, n, parentCode, chapter, col = None):
     try:
-        response = supabase.table("link").select("*").match({
+        if col:
+            select_col = ", ".join(col)
+        else:
+            select_col = "*"
+        
+        response = supabase.table("link").select(select_col).match({
             "chapter": chapter,
-            "rank": parentCode,
+            "rank": n,
             "code": parentCode
         }).execute()
-        
+
         if not response.data:
             raise ValueError(f"No data found for parent code: {parentCode}")
-        
         return response.data
     except Exception as e:
         print("An error occurred:", e)
         return None
+    
+def jsonl_to_list(data):
+    data_dict = {}
+    for key, value in data.items():
+        if key not in data_dict:
+            data_dict[key] = []
+        data_dict[key].append(value)
+    return data_dict
