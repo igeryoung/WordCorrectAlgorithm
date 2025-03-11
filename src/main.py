@@ -57,7 +57,17 @@ def HasCommaPipeline(supabase, model, raw_code, raw_text):
     return corrected_code, corrected_name
 
 def NoCommaPipeline(supabase, model, raw_code, raw_text):
-    pass
+    corrected_code = []
+    corrected_name = []
+
+    # determine chapter
+    chapter_code = None
+    info_from_code = GetChapterInfoByCode(supabase, raw_code)
+    if info_from_code['name'] in raw_text:
+        chapter_code = info_from_code['chapter']
+    else:
+        get
+
 
 if __name__ == "__main__":
 

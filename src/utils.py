@@ -80,3 +80,14 @@ def jsonl_to_list(data):
                 data_dict[key] = []
             data_dict[key].append(value)
     return data_dict
+
+def QueryAllChapterItemByChapterCode(supabase, test_code):
+    try:
+        raw_code = test_code[:5]
+        response = supabase.table("link").select("childname").eq("chapter", raw_code).execute()
+        unique_values = list(set(item["childname"] for item in response.data))
+        return unique_values
+    
+    except Exception as e:
+        print("An error occurred:", e)
+        return None
