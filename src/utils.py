@@ -1,3 +1,14 @@
+import re
+
+def remove_first_english_char(s):
+    """
+    Removes the first character if it is an English letter (A-Z or a-z).
+    
+    :param s: Input string
+    :return: Modified string with the first English letter removed (if applicable)
+    """
+    return re.sub(r'^[A-Za-z]', '', s)
+
 def GetChapterInfoByCode(supabase, test_code):
     try:
         raw_code = test_code[:5]

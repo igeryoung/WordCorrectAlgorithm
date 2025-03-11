@@ -54,11 +54,10 @@ def HasCommaPipeline(supabase, model, raw_code, raw_text):
         cur_rank += 1
         cur_code = candidates[idx]['childcode']
 
-    print(corrected_code)
-    print(corrected_name)
     return corrected_code, corrected_name
 
-
+def NoCommaPipeline(supabase, model, raw_code, raw_text):
+    pass
 
 if __name__ == "__main__":
 
@@ -76,10 +75,8 @@ if __name__ == "__main__":
     raw_text = '結構用混凝土，預拌，210kgf/cm2，第1型水泥，含澆置及搗實'
 
     # main function
+    raw_code = remove_first_english_char(raw_code)
     mode, raw_text = TestCommaExist(raw_text)
     if mode == "comma":
-        HasCommaPipeline(supabase, model, raw_code, raw_text)
-        
-    
-
-    
+        corrected_code, corrected_name = HasCommaPipeline(supabase, model, raw_code, raw_text)
+    elif mode == "no_comma":
