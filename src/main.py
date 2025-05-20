@@ -22,37 +22,38 @@ def HasCommaPipeline(supabase, model, raw_code, raw_text):
     corrected_code = []
     corrected_name = []
 
-    chapter_info, raw_text = TestChapterCodeConsistency(supabase, raw_code, raw_text)
+    chapter_info, raw_text = TestChapterCodeConsistency(supabase, raw_code, raw_text) 
+
     corrected_code.append(chapter_info['chapter'])
     corrected_name.append(chapter_info['name'])
 
-    chapter = int(chapter_info['chapter'])
-    cur_rank = 0
+    chapter = chapter_info['chapter']
+    cur_digit = 5
     cur_code = chapter_info['chapter']
 
     for text in raw_text[1:]:
         candidates = QueryNthCandidateByParentCode(supabase, 
-            rank = cur_rank, 
+            digit = cur_digit, 
             parentCode = cur_code, 
             chapter = chapter, 
-            col = ['childcode', 'childname'])
+            col = ['child_code', 'child_name'])
         candidates_list = jsonl_to_list(candidates)
 
-        if len(candidates_list) == 0:
+        if len(candidates_list['child_name']) == 0:
             break
 
-        if text in candidates_list['childname']:
-            idx = candidates_list['childname'].index(text)
+        if text in candidates_list['child_name']:
+            idx = candidates_list['child_name'].index(text)
         else:
-            embeddings = model.encode([text] + candidates_list['childname'])
+            embeddings = model.encode([text] + candidates_list['child_name'])
             similarities = model.similarity(embeddings, embeddings)
             idx = torch.argmax(similarities[0][1:])
         
-        corrected_code.append(candidates[idx]['childcode'])
-        corrected_name.append(candidates[idx]['childname'])
+        corrected_code.append(candidates_list['child_code'][idx])
+        corrected_name.append(candidates_list['child_name'][idx])
 
-        cur_rank += 1
-        cur_code = candidates[idx]['childcode']
+        cur_digit += 1
+        cur_code = candidates_list['child_code'][idx]
 
     return corrected_code, corrected_name
 
@@ -66,7 +67,10 @@ def NoCommaPipeline(supabase, model, raw_code, raw_text):
     if info_from_code['name'] in raw_text:
         chapter_code = info_from_code['chapter']
     else:
-        get
+        data = QueryAllChapterItemByChapterCode(supabase, raw_code)
+        for item in data:
+            if item in raw_text:
+                chapter_code = info_from_code['chapter']
 
 
 if __name__ == "__main__":
@@ -86,7 +90,10 @@ if __name__ == "__main__":
 
     # main function
     raw_code = remove_first_english_char(raw_code)
+
     mode, raw_text = TestCommaExist(raw_text)
     if mode == "comma":
         corrected_code, corrected_name = HasCommaPipeline(supabase, model, raw_code, raw_text)
+        print(corrected_code, corrected_name)
     elif mode == "no_comma":
+        pass

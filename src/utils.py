@@ -12,7 +12,7 @@ def remove_first_english_char(s):
 def GetChapterInfoByCode(supabase, test_code):
     try:
         raw_code = test_code[:5]
-        response = supabase.table("chapter_name").select("*").eq("chapter", raw_code).execute()
+        response = supabase.table("chapter").select("*").eq("chapter", raw_code).execute()
         
         if not response.data:
             raise ValueError(f"No data found for chapter code: {raw_code}")
@@ -25,7 +25,7 @@ def GetChapterInfoByCode(supabase, test_code):
     
 def GetChapterInfoByText(supabase, text):
     try:
-        response = supabase.table("chapter_name").select("*").eq("name", text).execute()
+        response = supabase.table("chapter").select("*").eq("name", text).execute()
         
         if not response.data:
             raise ValueError(f"No data found for chapter text: {text}")
@@ -47,12 +47,14 @@ def TestChapterCodeConsistency(supabase, raw_code, raw_text):
     info_from_code = GetChapterInfoByCode(supabase, raw_code)
     info_from_text = GetChapterInfoByText(supabase, raw_text[0])
 
-    if info_from_code != info_from_text:
-        raw_text = [info_from_code["name"]] + raw_text
+    # handle case : chapter name not found in raw text
+    if not info_from_text['name']:
+        return info_from_code, [info_from_code['name']] + raw_text
 
     return info_from_code, raw_text
 
-def QueryNthCandidateByParentCode(supabase, rank, parentCode, chapter, col = None):
+def QueryNthCandidateByParentCode(supabase, digit, parentCode, chapter, col = None):
+
     try:
         if col:
             select_col = ", ".join(col)
@@ -61,7 +63,7 @@ def QueryNthCandidateByParentCode(supabase, rank, parentCode, chapter, col = Non
         
         response = supabase.table("link").select(select_col).match({
             "chapter": chapter,
-            "rank": rank,
+            "digit": digit,
             "code": parentCode
         }).execute()
 

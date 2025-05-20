@@ -23,11 +23,12 @@ def measure_execution_time(test_func, input_params):
     
     ed = time.time()
     print("Time cost:", round(ed - st, 4))
+    return data
 
     
 if __name__ == "__main__":
 
-    raw_code = 'AAA0251Z4'
+    raw_code = '03310251Z4'
     raw_text = '結構用混凝土，預拌，210kgf/cm2，第1型水泥，含澆置及搗實'
 
     load_dotenv()
@@ -38,4 +39,5 @@ if __name__ == "__main__":
         "test_code": raw_code
     }
 
-    measure_execution_time(QueryAllChapterItemByChapterCode, input_params)
+    data = measure_execution_time(QueryAllChapterItemByChapterCode, input_params)
+    print(data[0:5])
